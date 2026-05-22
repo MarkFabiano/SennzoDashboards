@@ -1,3 +1,4 @@
+// cache-bust: 2026-05-23
 import { createServer } from 'http';
 import { readFileSync, existsSync, statSync } from 'fs';
 import { join, extname } from 'path';
