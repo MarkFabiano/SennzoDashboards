@@ -2,8 +2,11 @@ FROM node:18-alpine
 
 WORKDIR /app
 
+# Cache-bust: forces npm ci to re-run on every build, preventing stale layer reuse
+ARG CACHEBUST=20260523
+
 COPY package*.json ./
-RUN npm ci --omit=dev=false
+RUN npm ci
 
 COPY . .
 RUN npm run build
