@@ -40,19 +40,26 @@ A lightweight Vite + React 18 wrapper that hosts planning dashboards for Project
 
 `server.js` is a minimal Node.js HTTP server in the repo root that serves `dist/` and redirects all routes to `index.html` (required for React Router client-side routing).
 
-### Source of truth: `Dockerfile` → `CMD ["node", "server.js"]`
-Builder is set to **DOCKERFILE** (not Nixpacks). This bypasses Nixpacks layer caching entirely — the only way to guarantee stale `node_modules` can't survive across deploys.
+### Builder: RAILPACK
+Builder is **RAILPACK** (Railway's default). `railway.json` says `"builder": "DOCKERFILE"` but Railway's API no longer recognises `DOCKERFILE` as a valid builder enum — it is silently ignored and RAILPACK is used.
 
-The `Procfile` also exists and mirrors the Dockerfile CMD. If the builder is ever switched to Nixpacks, the Procfile takes over as source of truth.
+The `Dockerfile` in the repo root is present and may be picked up by RAILPACK auto-detection, but is not the primary build mechanism.
 
-Do **not** set `startCommand` in:
-- Railway dashboard / API
-- `railway.json` deploy section
-- `nixpacks.toml`
+`startCommand` is set to `node server.js` at the Railway service level. The `Procfile` (`web: node server.js`) is also present as a fallback.
 
 ### Build
-Dockerfile handles: `npm ci` → `npm run build` → `EXPOSE 3000` → `CMD node server.js`
-No separate `buildCommand` needed in `railway.json`.
+RAILPACK auto-detects Node.js: runs `npm install` → `npm run build`.
+`startCommand: node server.js` is the active start command (set via API).
+
+### Triggering a deploy
+Use `serviceInstanceDeploy` with `latestCommit: true` — NOT `serviceInstanceDeployV2`.
+`serviceInstanceDeployV2` restarts the cached image and does NOT pull new code.
+
+```bash
+curl -X POST https://backboard.railway.app/graphql/v2 \
+  -H "Authorization: Bearer $RAILWAY_API_TOKEN" \
+  -d '{"query": "mutation { serviceInstanceDeploy(serviceId: \"afd9ae09-69f1-4725-946d-f3d89e08510d\", environmentId: \"b9c98a8a-b636-466e-9ac6-01cb82438914\", latestCommit: true) }"}'
+```
 
 ### Adding a new dashboard
 1. Drop the `.jsx` file into `src/dashboards/`
