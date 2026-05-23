@@ -18,8 +18,10 @@ import {
   Tooltip, ResponsiveContainer,
 } from 'recharts';
 import { createClient } from '@supabase/supabase-js';
-import { DashboardShell } from '../components/DashboardShell';
-import { useAuth } from '../contexts/AuthContext';
+import { DashboardShell }  from '../components/DashboardShell';
+import { useAuth }         from '../contexts/AuthContext';
+import { VideoUpload }     from '../components/VideoUpload';
+import { AnalysisPanel }   from '../components/AnalysisPanel';
 
 // ── Supabase ──────────────────────────────────────────────────────────────────
 const sb = createClient(
@@ -99,6 +101,20 @@ interface DriverProfile {
   auth_user_id: string;
   display_name: string;
   full_name: string;
+}
+
+interface KartVideo {
+  id:                    string;
+  driver_id:             string;
+  kart_session_id:       string | null;
+  kart_race_id:          string | null;
+  title:                 string | null;
+  footage_type:          string | null;
+  mux_playback_id:       string | null;
+  upload_status:         string;
+  analysis_status:       string;
+  analysis_result:       unknown | null;
+  created_at:            string;
 }
 
 // ── Lap time formatter ────────────────────────────────────────────────────────
@@ -447,7 +463,16 @@ function RacesTab({ races, driverId, onAdded }: { races: KartRace[]; driverId: s
 }
 
 // ── TAB: Sessions ─────────────────────────────────────────────────────────────
-function SessionsTab({ sessions, driverId, onAdded }: { sessions: KartSession[]; driverId: string; onAdded: () => void }) {
+function SessionsTab({
+  sessions, driverId, videos, driverName, onAdded, onVideoAdded,
+}: {
+  sessions: KartSession[];
+  driverId: string;
+  videos: KartVideo[];
+  driverName: string;
+  onAdded: () => void;
+  onVideoAdded: () => void;
+}) {
   const [selected, setSelected] = useState<KartSession | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState({ session_date: '', circuit_name: '', session_type: 'practice', conditions: '', lap_times_str: '', notes: '' });
@@ -518,30 +543,70 @@ function SessionsTab({ sessions, driverId, onAdded }: { sessions: KartSession[];
                 </div>
               </div>
 
-              {isOpen && laps.length > 0 && (
+              {isOpen && (
                 <div style={{ marginTop: 14, borderTop: `1px solid ${T.dimmer}`, paddingTop: 14 }}>
-                  <div style={{ display: 'flex', gap: 24, marginBottom: 12, fontSize: 11 }}>
-                    <span><span style={{ color: T.dim }}>Best: </span><span style={{ color: T.gold, fontFamily: 'monospace' }}>{best ? fmtLap(best) : '—'}</span></span>
-                    <span><span style={{ color: T.dim }}>Avg: </span><span style={{ color: T.text, fontFamily: 'monospace' }}>{avg ? fmtLap(Math.round(avg)) : '—'}</span></span>
-                    <span><span style={{ color: T.dim }}>Worst: </span><span style={{ color: T.text, fontFamily: 'monospace' }}>{fmtLap(Math.max(...laps))}</span></span>
+                  {laps.length > 0 && (
+                    <>
+                      <div style={{ display: 'flex', gap: 24, marginBottom: 12, fontSize: 11 }}>
+                        <span><span style={{ color: T.dim }}>Best: </span><span style={{ color: T.gold, fontFamily: 'monospace' }}>{best ? fmtLap(best) : '—'}</span></span>
+                        <span><span style={{ color: T.dim }}>Avg: </span><span style={{ color: T.text, fontFamily: 'monospace' }}>{avg ? fmtLap(Math.round(avg)) : '—'}</span></span>
+                        <span><span style={{ color: T.dim }}>Worst: </span><span style={{ color: T.text, fontFamily: 'monospace' }}>{fmtLap(Math.max(...laps))}</span></span>
+                      </div>
+                      <ResponsiveContainer width="100%" height={100}>
+                        <LineChart data={chartData}>
+                          <CartesianGrid stroke={T.dimmer} strokeDasharray="3 3" />
+                          <XAxis dataKey="lap" tick={{ fill: T.dim, fontSize: 9 }} />
+                          <YAxis
+                            domain={['auto', 'auto']}
+                            tick={{ fill: T.dim, fontSize: 9 }}
+                            tickFormatter={ms => fmtLap(ms)}
+                            width={50}
+                          />
+                          <Tooltip
+                            contentStyle={{ background: '#111', border: `1px solid ${T.border}`, fontSize: 10 }}
+                            formatter={(v: number) => [fmtLap(v), 'Lap time']}
+                          />
+                          <Line type="monotone" dataKey="time" stroke={T.gold} strokeWidth={1.5} dot={{ fill: T.gold, r: 2 }} />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </>
+                  )}
+
+                  {/* Video panel — uploads + AI analysis */}
+                  <div style={{ marginTop: 16, borderTop: `1px solid ${T.dimmer}`, paddingTop: 14 }}>
+                    {/* Existing videos */}
+                    {videos.filter(v => v.kart_session_id === s.id).map(v => (
+                      <div key={v.id} style={{ marginBottom: 16 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+                          <span style={{ fontSize: 11, color: '#fff' }}>🎬 {v.title ?? 'Video'}</span>
+                          <span style={{
+                            fontSize: 9, padding: '2px 6px', borderRadius: 3,
+                            background: v.upload_status === 'ready' ? '#22c55e22' : '#44444422',
+                            border: `1px solid ${v.upload_status === 'ready' ? '#22c55e44' : '#44444444'}`,
+                            color: v.upload_status === 'ready' ? T.green : T.dim,
+                          }}>
+                            {v.upload_status}
+                          </span>
+                        </div>
+                        {v.upload_status === 'ready' && (
+                          <AnalysisPanel
+                            videoId={v.id}
+                            analysisStatus={v.analysis_status}
+                            analysisResult={(v.analysis_result as any) ?? null}
+                            driverName={driverName}
+                            onAnalysisRequested={onVideoAdded}
+                          />
+                        )}
+                      </div>
+                    ))}
+
+                    {/* Upload new video */}
+                    <VideoUpload
+                      sessionId={s.id}
+                      driverId={driverId}
+                      onUploaded={onVideoAdded}
+                    />
                   </div>
-                  <ResponsiveContainer width="100%" height={100}>
-                    <LineChart data={chartData}>
-                      <CartesianGrid stroke={T.dimmer} strokeDasharray="3 3" />
-                      <XAxis dataKey="lap" tick={{ fill: T.dim, fontSize: 9 }} />
-                      <YAxis
-                        domain={['auto', 'auto']}
-                        tick={{ fill: T.dim, fontSize: 9 }}
-                        tickFormatter={ms => fmtLap(ms)}
-                        width={50}
-                      />
-                      <Tooltip
-                        contentStyle={{ background: '#111', border: `1px solid ${T.border}`, fontSize: 10 }}
-                        formatter={(v: number) => [fmtLap(v), 'Lap time']}
-                      />
-                      <Line type="monotone" dataKey="time" stroke={T.gold} strokeWidth={1.5} dot={{ fill: T.gold, r: 2 }} />
-                    </LineChart>
-                  </ResponsiveContainer>
                 </div>
               )}
             </Card>
@@ -787,6 +852,7 @@ export default function KartingDashboard() {
   const [sessions, setSessions] = useState<KartSession[]>([]);
   const [entries,  setEntries]  = useState<CompEntry[]>([]);
   const [hardware, setHardware] = useState<HardwareItem[]>([]);
+  const [videos,   setVideos]   = useState<KartVideo[]>([]);
   const [drivers,  setDrivers]  = useState<DriverProfile[]>([]);
   const [selectedDriverAuthId, setSelectedDriverAuthId] = useState<string>('');
 
@@ -795,17 +861,23 @@ export default function KartingDashboard() {
   const filterById       = role === 'coach' && selectedDriverAuthId
     ? selectedDriverAuthId : driverId;
 
+  // Driver display name for AI analysis prompt
+  const driverName = drivers.find(d => d.auth_user_id === filterById)?.display_name
+    ?? (role === 'enzo' ? (user?.email?.split('@')[0] ?? 'Enzo') : 'Enzo');
+
   const load = async () => {
-    const [racesRes, sessRes, entryRes, hwRes] = await Promise.all([
+    const [racesRes, sessRes, entryRes, hwRes, videosRes] = await Promise.all([
       sb.from('kart_races').select('*').eq('driver_id', filterById).order('race_date', { ascending: false }),
       sb.from('kart_sessions').select('*').eq('driver_id', filterById).order('session_date', { ascending: false }),
       sb.from('kart_competition_entries').select('*').eq('driver_id', filterById).order('event_date'),
       sb.from('hardware_inventory').select('*'),
+      sb.from('kart_videos').select('*').eq('driver_id', filterById).order('created_at', { ascending: false }),
     ]);
-    setRaces(racesRes.data   ?? []);
-    setSessions(sessRes.data ?? []);
-    setEntries(entryRes.data ?? []);
-    setHardware(hwRes.data   ?? []);
+    setRaces(racesRes.data    ?? []);
+    setSessions(sessRes.data  ?? []);
+    setEntries(entryRes.data  ?? []);
+    setHardware(hwRes.data    ?? []);
+    setVideos(videosRes.data  ?? []);
   };
 
   useEffect(() => {
@@ -884,7 +956,7 @@ export default function KartingDashboard() {
         {/* Tab content */}
         {activeTab === 'overview'  && <OverviewTab  races={races} entries={entries} />}
         {activeTab === 'races'     && <RacesTab     races={races} driverId={filterById} onAdded={load} />}
-        {activeTab === 'sessions'  && <SessionsTab  sessions={sessions} driverId={filterById} onAdded={load} />}
+        {activeTab === 'sessions'  && <SessionsTab  sessions={sessions} driverId={filterById} videos={videos} driverName={driverName} onAdded={load} onVideoAdded={load} />}
         {activeTab === 'kart'      && <KartTab      hardware={hardware} sessions={sessions} />}
         {activeTab === 'guide'     && <CompGuideTab />}
       </div>
