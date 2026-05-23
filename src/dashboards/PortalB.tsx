@@ -10,6 +10,7 @@
 //            enzo   = access denied.
 
 import { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer,
@@ -688,6 +689,17 @@ function RoleGate({ onSelect }: { onSelect: (r: string) => void }) {
 // ─────────────────────────────────────────────────────────────────────────────
 export default function PortalB() {
   const [role,       setRole]       = useState<string>(() => sessionStorage.getItem('sennzo_role') ?? '');
+  // Mark's driver mode toggle (coach role only)
+  const [markMode,   setMarkMode]   = useState<'admin' | 'driver'>(
+    () => (localStorage.getItem('sennzo_mark_mode') as 'admin' | 'driver') ?? 'admin'
+  );
+  const navigate = useNavigate();
+
+  const toggleMarkMode = (mode: 'admin' | 'driver') => {
+    localStorage.setItem('sennzo_mark_mode', mode);
+    setMarkMode(mode);
+    if (mode === 'driver') navigate('/cockpit');
+  };
   const [tab,        setTab]        = useState<Tab>('home');
   const [drivers,    setDrivers]    = useState<DriverProfile[]>([]);
   const [sessions,   setSessions]   = useState<Session[]>([]);
@@ -773,6 +785,37 @@ export default function PortalB() {
           </div>
           <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
             {loading && <span style={{ fontSize: 10, color: T.dimmer }}>Loading...</span>}
+            {/* Mark's driver mode toggle — only visible to coach role */}
+            {role === 'coach' && (
+              <>
+                <button
+                  onClick={() => toggleMarkMode('driver')}
+                  title="Switch to your own driver view"
+                  style={{
+                    background: markMode === 'driver' ? '#E8B84B22' : 'none',
+                    border: `1px solid ${markMode === 'driver' ? '#E8B84B' : T.border}`,
+                    color: markMode === 'driver' ? '#E8B84B' : T.dim,
+                    cursor: 'pointer', fontSize: 10, fontFamily: 'inherit',
+                    padding: '4px 10px', borderRadius: 4,
+                  }}
+                >
+                  🏁 Driver View
+                </button>
+                <button
+                  onClick={() => toggleMarkMode('admin')}
+                  title="Admin / coaching view"
+                  style={{
+                    background: markMode === 'admin' ? '#E8B84B22' : 'none',
+                    border: `1px solid ${markMode === 'admin' ? '#E8B84B' : T.border}`,
+                    color: markMode === 'admin' ? '#E8B84B' : T.dim,
+                    cursor: 'pointer', fontSize: 10, fontFamily: 'inherit',
+                    padding: '4px 10px', borderRadius: 4,
+                  }}
+                >
+                  👑 Admin View
+                </button>
+              </>
+            )}
             <button onClick={() => { sessionStorage.removeItem('sennzo_role'); setRole(''); }} style={{ background: 'none', border: 'none', color: T.dimmer, cursor: 'pointer', fontSize: 10, fontFamily: 'inherit' }}>Switch role</button>
           </div>
         </div>
