@@ -2,6 +2,13 @@ import { useNavigate } from 'react-router-dom';
 
 const DASHBOARDS = [
   {
+    route: '/live',
+    title: 'Portal C — Live Coaching Overlay',
+    description: 'Real-time telemetry chart, emotion state, coaching events. Coach/parent view during sessions.',
+    version: 'v1',
+    date: '2026-05-23',
+  },
+  {
     route: '/multi-user-plan',
     title: 'Multiple Users + Go-Karting',
     description: 'Access matrix, user tiers, Module 13 plan, build phases, decision log.',
