@@ -9,6 +9,13 @@ const DASHBOARDS = [
     date: '2026-05-23',
   },
   {
+    route: '/parent',
+    title: 'Portal B — Parent Command Centre',
+    description: 'Session history, behavioral logs (SECRET), hardware inventory, training roadmap, news board.',
+    version: 'v1',
+    date: '2026-05-23',
+  },
+  {
     route: '/multi-user-plan',
     title: 'Multiple Users + Go-Karting',
     description: 'Access matrix, user tiers, Module 13 plan, build phases, decision log.',
