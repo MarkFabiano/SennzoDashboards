@@ -16,6 +16,13 @@ const DASHBOARDS = [
     date: '2026-05-23',
   },
   {
+    route: '/cockpit',
+    title: 'Portal A — Driver Cockpit',
+    description: "Enzo's view: stats, lap history, track records, milestone progress, session start screen.",
+    version: 'v1',
+    date: '2026-05-23',
+  },
+  {
     route: '/multi-user-plan',
     title: 'Multiple Users + Go-Karting',
     description: 'Access matrix, user tiers, Module 13 plan, build phases, decision log.',
