@@ -7,6 +7,7 @@ import MultiUserPlan        from './dashboards/MultiUserPlan';
 import PortalC              from './dashboards/PortalC';
 import PortalB              from './dashboards/PortalB';
 import PortalA              from './dashboards/PortalA';
+import KartingDashboard     from './dashboards/KartingDashboard';
 
 export default function App() {
   return (
@@ -32,6 +33,12 @@ export default function App() {
           <Route path="/cockpit" element={
             <ProtectedRoute><PortalA /></ProtectedRoute>
           } />
+          {/* Module 13 — Go-Karting */}
+          <Route path="/karting"                  element={<ProtectedRoute><KartingDashboard /></ProtectedRoute>} />
+          <Route path="/karting/races"             element={<ProtectedRoute><KartingDashboard /></ProtectedRoute>} />
+          <Route path="/karting/sessions"          element={<ProtectedRoute><KartingDashboard /></ProtectedRoute>} />
+          <Route path="/karting/kart"              element={<ProtectedRoute><KartingDashboard /></ProtectedRoute>} />
+          <Route path="/karting/competition-guide" element={<ProtectedRoute><KartingDashboard /></ProtectedRoute>} />
           {/* New routes added here as Cowork drops dashboards in */}
         </Routes>
       </AuthProvider>

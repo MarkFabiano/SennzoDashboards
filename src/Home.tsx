@@ -29,6 +29,13 @@ const DASHBOARDS = [
     version: 'v3',
     date: '2026-05-22',
   },
+  {
+    route: '/karting',
+    title: 'Module 13 — Go-Karting',
+    description: 'Season overview, race results, kart sessions, kart specs, competition guide. Full karting tracker.',
+    version: 'v1',
+    date: '2026-05-23',
+  },
   // Cowork adds entries here as new dashboards arrive
 ];
 

@@ -7,6 +7,7 @@
 // NO behavioral data, NO coaching notes, NO SECRET fields of any kind.
 
 import { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, Legend,
@@ -581,6 +582,7 @@ const COCKPIT_CSS = `
 // Main Portal A
 // ─────────────────────────────────────────────────────────────────────────────
 export default function PortalA() {
+  const navigate     = useNavigate();
   const [tab,        setTab]        = useState<Tab>('overview');
   const [laps,       setLaps]       = useState<Lap[]>([]);
   const [tracks,     setTracks]     = useState<Track[]>([]);
@@ -628,7 +630,21 @@ export default function PortalA() {
             <div style={{ fontSize: 9, color: T.dimmer, letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: 3 }}>Project Sennzo</div>
             <div style={{ fontSize: 14, fontWeight: 700, color: T.gold, letterSpacing: '0.05em' }}>Driver Cockpit</div>
           </div>
-          {loading && <span style={{ fontSize: 10, color: T.dimmer }}>Loading...</span>}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            {loading && <span style={{ fontSize: 10, color: T.dimmer }}>Loading...</span>}
+            <button
+              onClick={() => navigate('/karting')}
+              title="Go-Karting Module"
+              style={{
+                background: '#E8B84B15', border: '1px solid #E8B84B44',
+                borderRadius: 4, padding: '5px 12px', cursor: 'pointer',
+                fontFamily: 'inherit', fontSize: 10, color: T.gold,
+                letterSpacing: '0.1em',
+              }}
+            >
+              🏎 Go-Karting
+            </button>
+          </div>
         </div>
 
         {/* Tab nav */}

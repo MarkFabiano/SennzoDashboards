@@ -785,6 +785,21 @@ export default function PortalB() {
           </div>
           <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
             {loading && <span style={{ fontSize: 10, color: T.dimmer }}>Loading...</span>}
+            {/* Go-Karting — visible to coach and parent */}
+            {isCoach && (
+              <button
+                onClick={() => navigate('/karting')}
+                title="Go-Karting Module"
+                style={{
+                  background: '#E8B84B15', border: '1px solid #E8B84B44',
+                  borderRadius: 4, padding: '4px 10px', cursor: 'pointer',
+                  fontFamily: 'inherit', fontSize: 10, color: T.gold,
+                  letterSpacing: '0.08em',
+                }}
+              >
+                🏎 Go-Karting
+              </button>
+            )}
             {/* Mark's driver mode toggle — only visible to coach role */}
             {role === 'coach' && (
               <>
